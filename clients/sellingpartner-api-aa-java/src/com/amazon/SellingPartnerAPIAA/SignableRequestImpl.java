@@ -3,9 +3,10 @@ package com.amazon.SellingPartnerAPIAA;
 import com.amazonaws.ReadLimitInfo;
 import com.amazonaws.SignableRequest;
 import com.amazonaws.http.HttpMethodName;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.Request;
+
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.Request;
 import okio.Buffer;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -39,7 +40,7 @@ class SignableRequestImpl implements SignableRequest<Request> {
     @Override
     public void addParameter(String name, String value) {
         HttpUrl newUrl = signableRequestBuilder.build()
-                .httpUrl()
+                .url()
                 .newBuilder()
                 .addEncodedQueryParameter(name, value)
                 .build();
@@ -73,38 +74,23 @@ class SignableRequestImpl implements SignableRequest<Request> {
 
     @Override
     public String getResourcePath() {
-        try {
-            return originalRequest.url()
-                    .toURI()
-                    .getPath();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+    	return originalRequest.url().uri().getPath();
     }
 
     @Override
     public Map<String, List<String>> getParameters() {
         Map<String, List<String>> parameters = new HashMap<>();
-        try {
-            List<NameValuePair> nameValuePairs = URLEncodedUtils.parse(originalRequest.url().toURI(),
-                    StandardCharsets.UTF_8);
-            nameValuePairs.forEach(nameValuePair -> parameters.put(nameValuePair.getName(),
-                    Collections.singletonList(nameValuePair.getValue())));
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        List<NameValuePair> nameValuePairs = URLEncodedUtils.parse(originalRequest.url().uri(),
+                StandardCharsets.UTF_8);
+        nameValuePairs.forEach(nameValuePair -> parameters.put(nameValuePair.getName(),
+                Collections.singletonList(nameValuePair.getValue())));
 
         return parameters;
     }
 
     @Override
     public URI getEndpoint() {
-        URI uri = null;
-        try {
-            uri = originalRequest.url().toURI();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        URI uri = originalRequest.url().uri();
 
         return URI.create(String.format("%s://%s", uri.getScheme(), uri.getHost()));
     }
